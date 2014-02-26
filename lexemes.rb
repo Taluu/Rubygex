@@ -8,22 +8,18 @@
     CLOSURE = '*'
 
     class Lexeme
-        @@list = {UNION => 1,
-                  CAT   => 2,
-
-                  OPTION  => 3,
-                  REPEAT  => 3,
-                  CLOSURE => 3}
-
-        
         attr_reader :prec
+
+        def initialize(prec)
+            @prec = prec
+        end
     end
 
     class Char < Lexeme
         attr_accessor :value
 
         def initialize(value)
-            @prec  = 4
+            super(4)
             @value = value
         end
 
@@ -33,17 +29,29 @@
     end
 
     class Operator < Lexeme
+        @@list = {UNION => 1,
+                  CAT   => 2,
+
+                  OPTION  => 3,
+                  REPEAT  => 3,
+                  CLOSURE => 3}
+
+        
         attr_reader :operator
+
+        def initialize(operator)
+            @operator = operator
+            @prec     = @@list[operator] 
+        end
     end
 
     class Unop < Operator
         attr_reader :argument
 
         def initialize(operator, argument)
-            @operator = operator
+            super(operator)
+
             @argument = argument
-            
-            @prec = @@list[operator]
         end
 
         def to_str
@@ -61,11 +69,10 @@
         attr_reader :left, :right
 
         def initialize(operator, left, right)
-            @left     = left
-            @right    = right
-            @operator = operator
+            super(operator)
             
-            @prec = @@list[operator]
+            @left  = left
+            @right = right
         end
 
         def to_str
