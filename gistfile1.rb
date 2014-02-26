@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
-require 'lexemes'
+$LOAD_PATH << './'
+require 'lexemes.rb'
 
 option  = lambda {|a| Unop.new(OPTION, a)}
 repeat  = lambda {|a| Unop.new(REPEAT, a)}
@@ -10,6 +11,4 @@ cat   = lambda {|a, b| Binop.new(CAT, a, b)}
 union = lambda {|a, b| Binop.new(UNION, a, b)}
 
 a = union.call(repeat.call(union.call(Char.new('a'), Char.new('b'))), option.call(Char.new('c')))
-a.to_str
-
-# result : (a|b)+|c?
+puts a.to_str

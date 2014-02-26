@@ -40,8 +40,9 @@
         attr_reader :operator
 
         def initialize(operator)
+            super(@@list[operator])
+
             @operator = operator
-            @prec     = @@list[operator] 
         end
     end
 
