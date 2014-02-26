@@ -10,6 +10,6 @@ cat   = lambda {|a, b| Binop.new(CAT, a, b)}
 union = lambda {|a, b| Binop.new(UNION, a, b)}
 
 a = union.call(repeat.call(union.call(Char.new('a'), Char.new('b'))), option.call(Char.new('c')))
-a
+a.to_str
 
 # result : (a|b)+|c?
