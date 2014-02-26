@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+require 'lexemes'
+
+option  = lambda {|a| Unop.new(OPTION, a)}
+repeat  = lambda {|a| Unop.new(REPEAT, a)}
+closure = lambda {|a| Unop.new(CLOSURE, a)}
+
+cat   = lambda {|a, b| Binop.new(CAT, a, b)}
+union = lambda {|a, b| Binop.new(UNION, a, b)}
+
+a = union.call(repeat.call(union.call(Char.new('a'), Char.new('b'))), option.call(Char.new('c')))
+a
+
+# result : (a|b)+|c?
