@@ -23,7 +23,7 @@
             @value = value
         end
 
-        def to_str
+        def to_s
             @value
         end
     end
@@ -55,8 +55,8 @@
             @argument = argument
         end
 
-        def to_str
-            arg = @argument.to_str
+        def to_s
+            arg = @argument.to_s
 
             if (@argument.prec < @prec)
                 arg = "(%s)" % arg
@@ -76,8 +76,8 @@
             @right = right
         end
 
-        def to_str
-            left, right = @left.to_str, @right.to_str
+        def to_s
+            left, right = @left.to_s, @right.to_s
 
             if (@left.prec < @prec)
                 left = "(%s)" % left

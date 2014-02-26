@@ -11,4 +11,4 @@ cat   = lambda {|a, b| Binop.new(CAT, a, b)}
 union = lambda {|a, b| Binop.new(UNION, a, b)}
 
 a = union.call(repeat.call(union.call(Char.new('a'), Char.new('b'))), option.call(Char.new('c')))
-puts a.to_str
+puts a
