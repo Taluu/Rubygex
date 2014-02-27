@@ -3,13 +3,6 @@
 $LOAD_PATH << './'
 require 'lexemes.rb'
 
-$option  = lambda {|a| Unop.new(OPTION, a)}
-$repeat  = lambda {|a| Unop.new(REPEAT, a)}
-$closure = lambda {|a| Unop.new(CLOSURE, a)}
-
-$cat   = lambda {|a, b| Binop.new(CAT, a, b)}
-$union = lambda {|a, b| Binop.new(UNION, a, b)}
-
 def from_postfix(input)
     unops = {'*' => $closure,
              '+' => $repeat,
@@ -34,6 +27,8 @@ def from_postfix(input)
 
     stack.pop
 end
+        
+trap("SIGINT") { exit! }
 
 while true do
     begin
@@ -41,6 +36,5 @@ while true do
         puts from_postfix(gets.chomp!)
     rescue IndexError
         puts "[ERROR] malformed expression"
-    rescue Interrupt
     end
 end
