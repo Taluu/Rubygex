@@ -16,9 +16,15 @@ def from_postfix(input)
     input.split("").each do |c|
         if binops.include? c
             right, left = stack.pop, stack.pop
+
+            raise IndexError if left.nil?
+            raise IndexError if right.nil?
+
             stack << binops[c].call(left, right)
         elsif unops.include? c
             arg = stack.pop
+            raise IndexError if arg.nil?
+
             stack << unops[c].call(arg)
         else
             stack << Char.new(c)
@@ -27,7 +33,7 @@ def from_postfix(input)
 
     stack.pop
 end
-        
+
 trap("SIGINT") { exit! }
 
 while true do
@@ -38,3 +44,4 @@ while true do
         puts "[ERROR] malformed expression"
     end
 end
+
