@@ -23,7 +23,13 @@ class Char < Lexeme
     end
 
     def to_s
-        @value
+        value = @value
+
+        if '*|()+?'.include? value
+            value = '\\' + value
+        end
+
+        return value
     end
 end
 
@@ -60,7 +66,7 @@ class Unop < Operator
             arg = "(%s)" % arg
         end
 
-        arg + @operator
+        return arg + @operator
     end
 end
 
@@ -85,7 +91,7 @@ class Binop < Operator
             right = "(%s)" % right
         end
 
-        left + @operator + right
+        return left + @operator + right
     end
 end
 

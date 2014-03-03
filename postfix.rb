@@ -13,7 +13,7 @@ def from_postfix(input)
 
     stack = []
 
-    input.split("").each do |c|
+    input.each_char do |c|
         if binops.include? c
             right, left = stack.pop, stack.pop
 
