@@ -34,7 +34,7 @@ def from_postfix(input)
     stack.pop
 end
 
-trap("SIGINT") { exit! }
+trap("SIGINT") { raise Interrupt }
 
 while true do
     begin
@@ -42,6 +42,8 @@ while true do
         puts from_postfix(gets.chomp!)
     rescue IndexError
         puts "[ERROR] malformed expression"
+    rescue Interrupt
+        break
     end
 end
 
