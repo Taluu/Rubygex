@@ -11,14 +11,18 @@ module Kernel
 end
 
 class Lexer
+    attr_reader :input
+
     def initialize(input)
         typehint(input, String)
 
+        @index    = 0
         @buffer   = nil
+        @input    = input
         @iterator = input.each_char
     end
 
-    def token
+    def consume
         if not @buffer.nil?
             token, @buffer = @buffer, nil
             return token
@@ -30,19 +34,24 @@ class Lexer
             token = @iterator.next
 
             if '*|()+?'.include? token
-                return OpenStruct.new(:name => token, :value => token)
+                token = OpenStruct.new(:name => token, :value => token, :index => @index)
             elsif token == '\\'
-                return OpenStruct.new(:name => 'CHAR', :value => @iterator.next)
+                token = OpenStruct.new(:name => 'CHAR', :value => @iterator.next, :index => @index)
+                @index = @index + 1;
             else
-                return OpenStruct.new(:name => 'CHAR', :value => token)
+                token = OpenStruct.new(:name => 'CHAR', :value => token, :index => @index)
             end
+
+            @index = @index + 1;
         rescue StopIteration
         end
+
+        return token
     end
 
     def peek
         if not @buffer
-            @buffer = self.token
+            @buffer = consume
         end
 
         return @buffer
@@ -88,13 +97,23 @@ class Parser
     def error(current, suggestions)
         typehint(suggestions, Array)
 
-        s = 'end of input'
+        s   = 'end of input'
+        pos = ''
 
         if current
-            s = '"%s"' % current.value
+            s   = '"%s" on position %d' % [current.value, current.index + 1]
+            pos = @lexer.input + "\n" + (' ' * (current.index)) + "^"
         end
 
-        raise ParseError, "Found %s, expected one of %s" % [s, suggestions.inspect]
+        if suggestions.include? 'CHAR'
+            suggestions[suggestions.index('CHAR')] = 'character'
+        end
+
+        if suggestions.include? nil
+            suggestions[suggestions.index(nil)] = 'end of input'
+        end
+
+        raise ParseError, "Found %s, expected one of %s\n%s" % [s, suggestions.inspect, pos]
     end
 
     # Validates a node, as it should end with an expected token
@@ -117,7 +136,7 @@ class Parser
         token = @lexer.peek
 
         if token and token.name == '|'
-            @lexer.token # consume |
+            @lexer.consume # consume |
             ast = $union.call(ast, expr)
         end
 
@@ -156,13 +175,13 @@ class Parser
 
         if token
             if token.name == '?'
-                @lexer.token # consume ?
+                @lexer.consume # consume ?
                 ast = $option.call(ast)
             elsif token.name == '*'
-                @lexer.token # consume *
+                @lexer.consume # consume *
                 ast = $closure.call(ast)
             elsif token.name == '+'
-                @lexer.token # consume +
+                @lexer.consume # consume +
                 ast = $repeat.call(ast)
             end
         end
@@ -185,12 +204,12 @@ class Parser
         ast = nil
 
         if token.name == '('
-            @lexer.token # consume (
+            @lexer.consume # consume (
             ast = expr
 
-            raise ParseError, "Unbalanced (" if not @lexer.token # consume )
+            raise ParseError, "Unbalanced (" if not @lexer.consume # consume )
         elsif token.name == 'CHAR'
-            @lexer.token # consume CHAR
+            @lexer.consume # consume CHAR
             ast = Char.new(token.value)
         else
             error(token, @@first['operand'])
