@@ -29,11 +29,11 @@ class Lexer
             token = @iterator.next
 
             if '*|()+?'.include? token
-                token = OpenStruct.new(:name => token, :value => token)
+                return OpenStruct.new(:name => token, :value => token)
             elsif token == '\\'
-                token = OpenStruct.new(:name => 'CHAR', :value => @iterator.next)
+                return OpenStruct.new(:name => 'CHAR', :value => @iterator.next)
             else
-                token = OpenStruct.new(:name => 'CHAR', :value => token)
+                return OpenStruct.new(:name => 'CHAR', :value => token)
             end
         rescue StopIteration
         end
