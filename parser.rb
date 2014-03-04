@@ -68,6 +68,12 @@ class Parser
         @lexer = lexer
     end
 
+    def parse
+        ast = expr
+        raise ParseError, "Unbalanced )" if @lexer.peek
+        return ast
+    end
+
     # Checks that the node can be used by the next token
     private def begins(node)
         token = @lexer.peek
@@ -89,7 +95,7 @@ class Parser
     end
 
     # Validates a node, as it should end with an expected token
-    private def end(node)
+    private def check_ends(node)
         token = @lexer.peek
         term  = if token then token.name else nil end
 
@@ -102,6 +108,16 @@ class Parser
     #         |  cat
     #
     private def expr
+        ast   = cat
+        token = @lexer.peek
+
+        if token and token.name == '|'
+            @lexer.token # consume |
+            ast = $union.call(ast, expr)
+        end
+
+        check_end('expr')
+        return ast
     end
 
     # Represents a cat rule
@@ -110,6 +126,14 @@ class Parser
     #        |  unop
     #
     private def cat
+        ast = unop
+
+        if begins('cat')
+            ast = $cat.call(ast, cat)
+        end
+
+        check_end('cat')
+        return ast
     end
 
     # Represents a unop rule
@@ -120,6 +144,24 @@ class Parser
     #         |  operand
     #
     private def unop
+        ast   = operand
+        token = @lexer.peek
+
+        if token
+            if token.name == '?'
+                @lexer.token # consume ?
+                ast = $option.call(ast)
+            elsif token.name == '*'
+                @lexer.token # consume *
+                ast = $closure.call(ast)
+            elsif token.name == '+'
+                @lexer.token # consume +
+                ast = $repeat.call(ast)
+            end
+        end
+
+        check_end('unop')
+        return ast
     end
 
     # Represents a operand rule
@@ -128,5 +170,25 @@ class Parser
     #            |  CHAR
     #
     private def operand
+        token = @lexer.peek
+
+        error(token, @@first['operand']) unless token
+
+        ast = nil
+
+        if token.name == '('
+            @lexer.token # consume (
+            ast = expr
+
+            raise ParseError "Unbalanced )" if not @lexer.token # consume )
+        elsif token.name == 'CHAR'
+            @lexer.token # consume CHAR
+            ast = $char.call(token.value)
+        else
+            error(token, @@first['operand'])
+        end
+
+        check_ends('operand')
+        return ast
     end
 end
