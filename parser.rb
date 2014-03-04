@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+$LOAD_PATH << './'
 require 'lexemes.rb'
 require 'ostruct'
 
@@ -75,14 +76,16 @@ class Parser
     end
 
     # Checks that the node can be used by the next token
-    private def begins(node)
+    private
+    def begins(node)
         token = @lexer.peek
         term  = if token then token.name else nil end
 
         return @@first[node].include? term
     end
 
-    private def error(current, suggestions)
+    private
+    def error(current, suggestions)
         typehint(suggestions, Array)
 
         s = 'end of input'
@@ -91,11 +94,12 @@ class Parser
             s = '"%s"' % current.value
         end
 
-        raise ParserError, "Found %s, expected one of %s" % [s, suggestions.inspect]
+        raise ParseError, "Found %s, expected one of %s" % [s, suggestions.inspect]
     end
 
     # Validates a node, as it should end with an expected token
-    private def check_ends(node)
+    private
+    def check_ends(node)
         token = @lexer.peek
         term  = if token then token.name else nil end
 
@@ -107,7 +111,8 @@ class Parser
     #   expr ::= cat '|' expr
     #         |  cat
     #
-    private def expr
+    private
+    def expr
         ast   = cat
         token = @lexer.peek
 
@@ -116,7 +121,7 @@ class Parser
             ast = $union.call(ast, expr)
         end
 
-        check_end('expr')
+        check_ends('expr')
         return ast
     end
 
@@ -125,14 +130,15 @@ class Parser
     #   cat ::= unop cat
     #        |  unop
     #
-    private def cat
+    private
+    def cat
         ast = unop
 
         if begins('cat')
             ast = $cat.call(ast, cat)
         end
 
-        check_end('cat')
+        check_ends('cat')
         return ast
     end
 
@@ -143,7 +149,8 @@ class Parser
     #         |  operand '+'
     #         |  operand
     #
-    private def unop
+    private
+    def unop
         ast   = operand
         token = @lexer.peek
 
@@ -160,7 +167,7 @@ class Parser
             end
         end
 
-        check_end('unop')
+        check_ends('unop')
         return ast
     end
 
@@ -169,7 +176,8 @@ class Parser
     #   operand ::= '(' expr ')'
     #            |  CHAR
     #
-    private def operand
+    private
+    def operand
         token = @lexer.peek
 
         error(token, @@first['operand']) unless token
@@ -180,10 +188,10 @@ class Parser
             @lexer.token # consume (
             ast = expr
 
-            raise ParseError "Unbalanced )" if not @lexer.token # consume )
+            raise ParseError, "Unbalanced (" if not @lexer.token # consume )
         elsif token.name == 'CHAR'
             @lexer.token # consume CHAR
-            ast = $char.call(token.value)
+            ast = Char.new(token.value)
         else
             error(token, @@first['operand'])
         end
