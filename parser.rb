@@ -16,10 +16,9 @@ class Lexer
     def initialize(input)
         typehint(input, String)
 
-        @index    = 0
         @buffer   = nil
         @input    = input
-        @iterator = input.each_char
+        @iterator = input.each_char.with_index
     end
 
     def consume
@@ -33,16 +32,13 @@ class Lexer
         begin
             token = @iterator.next
 
-            if '*|()+?'.include? token
-                token = OpenStruct.new(:name => token, :value => token, :index => @index)
+            if '*|()+?'.include? token[0]
+                token = OpenStruct.new(:name => token[0], :value => token[0], :index => token[1])
             elsif token == '\\'
-                token = OpenStruct.new(:name => 'CHAR', :value => @iterator.next, :index => @index)
-                @index = @index + 1;
+                token = OpenStruct.new(:name => 'CHAR', :value => @iterator.next[0], :index => token[1])
             else
-                token = OpenStruct.new(:name => 'CHAR', :value => token, :index => @index)
+                token = OpenStruct.new(:name => 'CHAR', :value => token[0], :index => token[1])
             end
-
-            @index = @index + 1;
         rescue StopIteration
         end
 
