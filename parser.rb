@@ -50,7 +50,7 @@ class Lexer
     end
 
     def peek
-        if not @buffer
+        if @buffer.nil?
             @buffer = consume
         end
 
@@ -65,12 +65,12 @@ class Parser
     @@first = {'operand' => ['(', 'CHAR'],
                'unop'    => ['(', 'CHAR'],
                'cat'     => ['(', 'CHAR'],
-               'expr'    => ['(', 'CHAR']}
+               'expr'    => ['(', 'CHAR']}.freeze
 
     @@following = {'expr'    => [')', nil],
                    'cat'     => ['|', ')', nil],
                    'unop'    => ['(', 'CHAR', '|', ')', nil],
-                   'operand' => ['?', '*', '+', '(', 'CHAR', ')', '|', nil]}
+                   'operand' => ['?', '*', '+', '(', 'CHAR', ')', '|', nil]}.freeze
 
     def initialize(lexer)
         typehint(lexer, Lexer)
@@ -80,15 +80,19 @@ class Parser
 
     def parse
         ast = expr
-        raise ParseError, "Unbalanced )" if @lexer.peek
+        raise ParseError, "Unbalanced )" if @lexer.peek.nil?
+
         return ast
     end
 
     # Checks that the node can be used by the next token
     private
     def begins(node)
-        token = @lexer.peek
-        term  = if token then token.name else nil end
+        term = @lexer.peek
+
+        if not term.nil?
+            term = term.name
+        end
 
         return @@first[node].include? term
     end
@@ -100,7 +104,7 @@ class Parser
         s   = 'end of input'
         pos = ''
 
-        if current
+        if not current.nil?
             s   = '"%s" on position %d' % [current.value, current.index + 1]
             pos = @lexer.input + "\n" + (' ' * (current.index)) + "^"
         end
@@ -119,10 +123,13 @@ class Parser
     # Validates a node, as it should end with an expected token
     private
     def check_ends(node)
-        token = @lexer.peek
-        term  = if token then token.name else nil end
+        term = @lexer.peek
 
-        error(token, @@following[node]) unless @@following[node].include? term
+        if not term.nil?
+            term = term.name
+        end
+
+        error(@lexer.peek, @@following[node].dup) unless @@following[node].include? term
     end
 
     # Represents a expr rule
@@ -135,7 +142,7 @@ class Parser
         ast   = cat
         token = @lexer.peek
 
-        if token and token.name == '|'
+        if not token.nil? and token.name == '|'
             @lexer.consume # consume |
             ast = $union.call(ast, expr)
         end
@@ -173,7 +180,7 @@ class Parser
         ast   = operand
         token = @lexer.peek
 
-        if token
+        if not token.nil?
             if token.name == '?'
                 @lexer.consume # consume ?
                 ast = $option.call(ast)
@@ -199,7 +206,7 @@ class Parser
     def operand
         token = @lexer.peek
 
-        error(token, @@first['operand']) unless token
+        error(token, @@first['operand'].dup) unless token
 
         ast = nil
 
@@ -207,12 +214,12 @@ class Parser
             @lexer.consume # consume (
             ast = expr
 
-            raise ParseError, "Unbalanced (" if not @lexer.consume # consume )
+            raise ParseError, "Unbalanced (" if @lexer.consume.nil? # consume )
         elsif token.name == 'CHAR'
             @lexer.consume # consume CHAR
             ast = Char.new(token.value)
         else
-            error(token, @@first['operand'])
+            error(token, @@first['operand'].dup)
         end
 
         check_ends('operand')
