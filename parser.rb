@@ -56,6 +56,11 @@ class Lexer
 
         return @buffer
     end
+
+    def rewind
+        @buffer = nil
+        @iterator.rewind
+    end
 end
 
 class ParseError < StandardError
@@ -81,6 +86,9 @@ class Parser
     def parse
         ast = expr
         raise ParseError, "Unbalanced )" if @lexer.peek.nil?
+
+        # rewind the lexer
+        @lexer.rewind
 
         return ast
     end
