@@ -104,15 +104,32 @@ class Parser
             pos = @lexer.input + "\n" + (' ' * (current.index)) + "^"
         end
 
-        if suggestions.include? 'CHAR'
-            suggestions[suggestions.index('CHAR')] = 'character'
+        suggested = [];
+
+        suggestions.each do |suggestion|
+            case suggestion
+                when 'CHAR'
+                    suggestion = 'character'
+                when nil
+                    suggestion = 'end of input'
+                else
+                    suggestion = '"%s"' % suggestion
+            end
+
+            suggested.push(suggestion)
         end
 
-        if suggestions.include? nil
-            suggestions[suggestions.index(nil)] = 'end of input'
+        suggestions = suggestions.replace(suggested)
+
+        suggested = suggestions[0...-1].join(',')
+
+        if (1 < suggestions.length)
+            suggested = suggested + ' or '
         end
 
-        raise ParseError, "Found %s, expected one of %s\n%s" % [s, suggestions.inspect, pos]
+        suggested = suggested + suggestions[-1]
+
+        raise ParseError, "Found %s, expected %s\n%s" % [s, suggested, pos]
     end
 
     # Validates a node, as it should end with an expected token
