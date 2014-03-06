@@ -76,7 +76,7 @@ class Parser
 
     def parse
         ast = expr
-        raise ParseError, "Unbalanced )" if @lexer.peek.nil?
+        raise ParseError, "Unbalanced )" if not @lexer.peek.nil?
         return ast
     end
 
