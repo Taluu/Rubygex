@@ -58,15 +58,15 @@ class ParseError < StandardError
 end
 
 class Parser
-    @@first = {'operand' => ['(', 'CHAR'],
-               'unop'    => ['(', 'CHAR'],
-               'cat'     => ['(', 'CHAR'],
-               'expr'    => ['(', 'CHAR']}.freeze
+    @@first = {'operand' => ['(', 'CHAR'].freeze,
+               'unop'    => ['(', 'CHAR'].freeze,
+               'cat'     => ['(', 'CHAR'].freeze,
+               'expr'    => ['(', 'CHAR'].freeze}
 
-    @@following = {'expr'    => [')', nil],
-                   'cat'     => ['|', ')', nil],
-                   'unop'    => ['(', 'CHAR', '|', ')', nil],
-                   'operand' => ['?', '*', '+', '(', 'CHAR', ')', '|', nil]}.freeze
+    @@following = {'expr'    => [')', nil].freeze,
+                   'cat'     => ['|', ')', nil].freeze,
+                   'unop'    => ['(', 'CHAR', '|', ')', nil].freeze,
+                   'operand' => ['?', '*', '+', '(', 'CHAR', ')', '|', nil].freeze}
 
     def initialize(lexer)
         typehint(lexer, Lexer)
