@@ -4,12 +4,12 @@ $LOAD_PATH << './'
 require 'lexemes.rb'
 
 def from_postfix(input)
-    unops = {'*' => $closure,
-             '+' => $repeat,
-             '?' => $option}
+    unops = {'*' => lambda {|a| return Compiler::Lexeme::closure(a)},
+             '+' => lambda {|a| return Compiler::Lexeme::repeat(a)},
+             '?' => lambda {|a| return Compiler::Lexeme::option(a)}}
 
-    binops = {'.' => $cat,
-              '|' => $union}
+    binops = {'.' => lambda {|a, b| return Compiler::Lexeme::cat(a, b)},
+              '|' => lambda {|a, b| return Compiler::Lexeme::union(a, b)}}
 
     stack = []
 
@@ -27,7 +27,7 @@ def from_postfix(input)
 
             stack << unops[c].call(arg)
         else
-            stack << Char.new(c)
+            stack << Compiler::Lexeme::char(c)
         end
     end
 

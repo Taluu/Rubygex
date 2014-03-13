@@ -1,104 +1,126 @@
 #!/usr/bin/env ruby
 
-CAT     = ''
-UNION   = '|'
-OPTION  = '?'
-REPEAT  = '+'
-CLOSURE = '*'
+module Compiler
+    module Lexeme
+        CAT     = ''
+        UNION   = '|'
+        OPTION  = '?'
+        REPEAT  = '+'
+        CLOSURE = '*'
 
-class Lexeme
-    attr_reader :prec
+        class Symbol
+            attr_reader :prec
 
-    def initialize(prec)
-        @prec = prec
-    end
-end
-
-class Char < Lexeme
-    attr_reader :value
-
-    def initialize(value)
-        super(4)
-        @value = value
-    end
-
-    def to_s
-        value = @value
-
-        if '*|()+?'.include? value
-            value = '\\' + value
+            def initialize(prec)
+                @prec = prec
+            end
         end
 
-        return value
-    end
-end
+        class Char < Symbol
+            attr_reader :value
 
-class Operator < Lexeme
-    @@list = {UNION => 1,
-              CAT   => 2,
+            def initialize(value)
+                super(4)
+                @value = value
+            end
 
-              OPTION  => 3,
-              REPEAT  => 3,
-              CLOSURE => 3}
+            def to_s
+                value = @value
 
-    attr_reader :operator
+                if '*|()+?'.include? value
+                    value = '\\' + value
+                end
 
-    def initialize(operator)
-        super(@@list[operator])
-
-        @operator = operator
-    end
-end
-
-class Unop < Operator
-    attr_reader :argument
-
-    def initialize(operator, argument)
-        super(operator)
-
-        @argument = argument
-    end
-
-    def to_s
-        arg = @argument.to_s
-
-        if (@argument.prec < @prec)
-            arg = "(%s)" % arg
+                return value
+            end
         end
 
-        return arg + @operator
-    end
-end
+        class Operator < Symbol
+            @@list = {UNION => 1,
+                      CAT   => 2,
 
-class Binop < Operator
-    attr_reader :left, :right
+                      OPTION  => 3,
+                      REPEAT  => 3,
+                      CLOSURE => 3}
 
-    def initialize(operator, left, right)
-        super(operator)
+            attr_reader :operator
 
-        @left  = left
-        @right = right
-    end
+            def initialize(operator)
+                super(@@list[operator])
 
-    def to_s
-        left, right = @left.to_s, @right.to_s
-
-        if (@left.prec < @prec)
-            left = "(%s)" % left
+                @operator = operator
+            end
         end
 
-        if (@right.prec < @prec)
-            right = "(%s)" % right
+        class Unop < Operator
+            attr_reader :argument
+
+            def initialize(operator, argument)
+                super(operator)
+
+                @argument = argument
+            end
+
+            def to_s
+                arg = @argument.to_s
+
+                if (@argument.prec < @prec)
+                    arg = "(%s)" % arg
+                end
+
+                return arg + @operator
+            end
         end
 
-        return left + @operator + right
+        class Binop < Operator
+            attr_reader :left, :right
+
+            def initialize(operator, left, right)
+                super(operator)
+
+                @left  = left
+                @right = right
+            end
+
+            def to_s
+                left, right = @left.to_s, @right.to_s
+
+                if (@left.prec < @prec)
+                    left = "(%s)" % left
+                end
+
+                if (@right.prec < @prec)
+                    right = "(%s)" % right
+                end
+
+                return left + @operator + right
+            end
+        end
+
+        class << self
+            def option(arg)
+                Unop.new(OPTION, arg)
+            end
+
+            def repeat(arg)
+                Unop.new(REPEAT, arg)
+            end
+
+            def closure(arg)
+                Unop.new(CLOSURE, arg)
+            end
+
+            def cat(left, right)
+                Binop.new(CAT, left, right)
+            end
+
+            def union(left, right)
+                Binop.new(UNION, left, right)
+            end
+
+            def char(arg)
+                Char.new(arg)
+            end
+        end
     end
 end
-
-$option  = lambda {|a| Unop.new(OPTION, a)}
-$repeat  = lambda {|a| Unop.new(REPEAT, a)}
-$closure = lambda {|a| Unop.new(CLOSURE, a)}
-
-$cat   = lambda {|a, b| Binop.new(CAT, a, b)}
-$union = lambda {|a, b| Binop.new(UNION, a, b)}
-

@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
 
 $LOAD_PATH << './'
-require 'lexemes.rb'
+require 'lexemes'
 
-a = $union.call($repeat.call($union.call(Char.new('a'), Char.new('b'))), $option.call(Char.new('c')))
-puts a # prints ((a|b)+)|c?
+module Compiler
+    a = Lexeme.union(Lexeme.repeat(Lexeme.union(Lexeme.char('a'), Lexeme.char('b'))), Lexeme.option(Lexeme.char('c')))
+    puts a # prints ((a|b)+)|c?
+end
